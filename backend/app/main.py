@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
+from app.webhook.router import router as webhook_router
 
 app = FastAPI(
     title="VaultCI",
@@ -17,18 +18,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(webhook_router)
+
+# Analytics/memory/report routers added after B9
+# from app.api.report import router as report_router
+# from app.api.memory import router as memory_router
+# from app.api.analytics import router as analytics_router
+# app.include_router(report_router)
+# app.include_router(memory_router)
+# app.include_router(analytics_router)
+
 
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "vaultci-backend"}
-
-
-# Routers are imported after B2-B9 parts are built
-# from app.webhook.router import router as webhook_router
-# from app.api.report import router as report_router
-# from app.api.memory import router as memory_router
-# from app.api.analytics import router as analytics_router
-# app.include_router(webhook_router)
-# app.include_router(report_router)
-# app.include_router(memory_router)
-# app.include_router(analytics_router)
