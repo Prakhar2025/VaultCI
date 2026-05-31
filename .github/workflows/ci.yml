@@ -52,4 +52,4 @@ jobs:
           GITHUB_WEBHOOK_SECRET: test_secret
           GITHUB_TOKEN: ""
           GROQ_API_KEY: ""
-        run: pytest tests/ -v --tb=short
+        run: python -m pytest tests/ -v --tb=short
