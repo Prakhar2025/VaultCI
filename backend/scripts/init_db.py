@@ -16,7 +16,7 @@ from app.models import Repository, PRTrustReport, DependencyGraphSnapshot  # noq
 async def create_tables():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    print("✅ PostgreSQL tables created.")
+    print("PostgreSQL tables created.")
 
 
 def create_qdrant_collections():
@@ -39,14 +39,14 @@ def create_qdrant_collections():
                     collection_name=name,
                     vectors_config=VectorParams(size=size, distance=dist),
                 )
-                print(f"✅ Qdrant collection created: {name}")
+                print(f"Qdrant collection created: {name}")
             else:
-                print(f"⏭  Qdrant collection already exists: {name}")
+                print(f"Qdrant collection already exists: {name}")
     except Exception as e:
-        print(f"⚠️  Qdrant not reachable (skip for now): {e}")
+        print(f"Qdrant not reachable (skip for now): {e}")
 
 
 if __name__ == "__main__":
     asyncio.run(create_tables())
     create_qdrant_collections()
-    print("\n🚀 VaultCI DB init complete.")
+    print("\nVaultCI DB init complete.")

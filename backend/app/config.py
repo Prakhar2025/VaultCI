@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     # Database
-    database_url: str = "postgresql+asyncpg://vaultci:vaultci_secret@localhost:5432/vaultci"
+    database_url: str = "postgresql+asyncpg://vaultci:vaultci_secret@localhost:5433/vaultci"
 
     # Qdrant
     qdrant_host: str = "localhost"
