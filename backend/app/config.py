@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     # Qdrant
     qdrant_host: str = "localhost"
     qdrant_port: int = 6333
+    qdrant_api_key: str = ""  # Required for Qdrant Cloud
 
     # GitHub
     github_webhook_secret: str = "dev_secret"

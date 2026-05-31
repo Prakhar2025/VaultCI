@@ -19,8 +19,16 @@ COLLECTIONS = [
 
 @lru_cache(maxsize=1)
 def get_qdrant():
-    """Return a cached Qdrant client instance."""
+    """Return a cached Qdrant client instance (local or cloud)."""
     from qdrant_client import QdrantClient
+    # If api_key is set → Qdrant Cloud (https), otherwise local Docker
+    if settings.qdrant_api_key:
+        return QdrantClient(
+            host=settings.qdrant_host,
+            port=settings.qdrant_port,
+            api_key=settings.qdrant_api_key,
+            https=True,
+        )
     return QdrantClient(host=settings.qdrant_host, port=settings.qdrant_port)
 
 

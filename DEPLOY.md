@@ -1,135 +1,181 @@
-# VaultCI — Production Deployment Guide
-
-## What You Need (All Free)
-- [Render](https://render.com) account — hosts the backend
-- [Vercel](https://vercel.com) account — hosts the frontend  
-- [Qdrant Cloud](https://cloud.qdrant.io) account — managed vector DB
-- [Neon](https://neon.tech) account — managed PostgreSQL (free tier)
+# VaultCI — Complete Deployment Cheat Sheet
+> Do this top to bottom. ~25 minutes total. All free.
 
 ---
 
-## Step 1 — Managed PostgreSQL on Neon (5 min)
+## BEFORE YOU START — Have These Ready
 
-1. Go to [neon.tech](https://neon.tech) → Create account → New Project
-2. Name it `vaultci`
-3. Copy the **Connection string** — it looks like:
-   ```
-   postgresql://user:password@ep-xxxx.us-east-2.aws.neon.tech/neondb?sslmode=require
-   ```
-4. Change the prefix from `postgresql://` to `postgresql+asyncpg://`
-5. Save this — you'll need it for Render
+Open your `.env` file and keep these values handy:
+```
+GITHUB_TOKEN=ghp_xxxxxxxxxxxx
+GITHUB_WEBHOOK_SECRET=prakhar123
+GROQ_API_KEY=gsk_xxxxxxxxxxxx
+```
 
 ---
 
-## Step 2 — Managed Qdrant Cloud (5 min)
+## STEP 1 — Neon (Free PostgreSQL) · ~5 min
+> URL: https://neon.tech
 
-1. Go to [cloud.qdrant.io](https://cloud.qdrant.io) → Sign up → Create Cluster
-2. Choose **Free tier** (1GB)
-3. Once created, copy:
-   - **Cluster URL** (e.g. `https://abc123.eu-central.aws.cloud.qdrant.io`)
-   - **API Key** (from Access tab)
-4. Save both
+1. Click **Sign Up** → use GitHub login
+2. Click **New Project**
+3. Name: `vaultci` · Region: pick closest to you · Click **Create Project**
+4. You'll see a **Connection string** box — click **Copy**
+   - It looks like: `postgresql://prakhar:abc123@ep-cool-fog.us-east-2.aws.neon.tech/neondb?sslmode=require`
+5. **IMPORTANT:** Change `postgresql://` to `postgresql+asyncpg://` at the start
+6. Final string looks like: `postgresql+asyncpg://prakhar:abc123@ep-cool-fog.us-east-2.aws.neon.tech/neondb?sslmode=require`
+7. ✅ Save this — called **DATABASE_URL** from now on
 
 ---
 
-## Step 3 — Deploy Backend to Render (10 min)
+## STEP 2 — Qdrant Cloud (Free Vector DB) · ~5 min
+> URL: https://cloud.qdrant.io
 
-1. Go to [render.com](https://render.com) → New → **Web Service**
-2. Connect your GitHub repo: `Prakhar2025/VaultCI`
-3. Settings:
+1. Click **Sign Up** → use GitHub login
+2. Click **Create Cluster**
+3. Name: `vaultci` · Plan: **Free** · Region: pick any · Click **Create**
+4. Wait ~2 minutes for cluster to start (status turns green)
+5. Click on your cluster → go to **API Keys** tab
+6. Click **Create API Key** → name it `vaultci` → click **Create**
+7. Copy the API key immediately (shown only once)
+8. Also copy the **Cluster URL** from the Overview tab
+   - Looks like: `https://abc123xyz.eu-central-1.aws.cloud.qdrant.io`
+9. ✅ Save both:
+   - **QDRANT_HOST** = the cluster URL (without `https://`)
+   - **QDRANT_API_KEY** = the API key you just created
+
+---
+
+## STEP 3 — Render (Deploy Backend) · ~10 min
+> URL: https://render.com
+
+1. Click **Sign Up** → use GitHub login
+2. Click **New +** → select **Web Service**
+3. Click **Connect a repository** → connect GitHub → select `Prakhar2025/VaultCI`
+4. Fill in settings:
+   - **Name:** `vaultci-backend`
    - **Root Directory:** `backend`
-   - **Runtime:** Docker
+   - **Runtime:** `Docker`
    - **Dockerfile Path:** `./Dockerfile`
-   - **Plan:** Free
-4. Add these **Environment Variables** in Render dashboard:
+   - **Branch:** `main`
+   - **Plan:** `Free`
+5. Scroll down to **Environment Variables** → click **Add Environment Variable** for each:
 
 | Key | Value |
 |-----|-------|
-| `DATABASE_URL` | Your Neon connection string (postgresql+asyncpg://...) |
-| `QDRANT_HOST` | Your Qdrant Cloud URL |
+| `DATABASE_URL` | Your Neon string from Step 1 |
+| `QDRANT_HOST` | Cluster URL from Step 2 (no https://) |
 | `QDRANT_PORT` | `6333` |
+| `QDRANT_API_KEY` | API key from Step 2 |
 | `GITHUB_WEBHOOK_SECRET` | `prakhar123` |
-| `GITHUB_TOKEN` | Your GitHub token from .env |
+| `GITHUB_TOKEN` | Your token from .env |
 | `GROQ_API_KEY` | Your Groq key from .env |
 | `DEBUG` | `false` |
 
-5. Click **Deploy** — wait ~5 minutes
-6. Your backend URL will be: `https://vaultci-backend.onrender.com`
-7. Test it: visit `https://vaultci-backend.onrender.com/health` — should return `{"status":"ok"}`
+6. Click **Deploy Web Service**
+7. Wait 5–8 minutes — you'll see logs streaming
+8. Once it says **"Your service is live"**, copy your URL:
+   - Looks like: `https://vaultci-backend.onrender.com`
+9. Test it — open in browser: `https://vaultci-backend.onrender.com/health`
+   - Should show: `{"status":"ok","service":"vaultci-backend"}`
+10. ✅ Backend is live — save this URL as **BACKEND_URL**
+
+### Initialize the Database (do this once)
+1. In Render dashboard → your service → click **Shell** tab
+2. Type and press Enter:
+   ```bash
+   python scripts/init_db.py
+   ```
+3. Should print: `PostgreSQL tables created` and `Qdrant collection created`
 
 ---
 
-## Step 4 — Initialize DB on Render
+## STEP 4 — Vercel (Deploy Frontend) · ~5 min
+> URL: https://vercel.com
 
-Once the backend is deployed, open Render **Shell** tab and run:
-```bash
-python scripts/init_db.py
-```
-This creates the PostgreSQL tables and Qdrant collections.
-
----
-
-## Step 5 — Deploy Frontend to Vercel (5 min)
-
-1. Go to [vercel.com](https://vercel.com) → New Project
-2. Import your GitHub repo: `Prakhar2025/VaultCI`
-3. Settings:
-   - **Root Directory:** `frontend`
-   - **Framework:** Next.js (auto-detected)
-4. Add **Environment Variable:**
+1. Click **Sign Up** → use GitHub login
+2. Click **Add New** → **Project**
+3. Click **Import** next to `Prakhar2025/VaultCI`
+4. Configure:
+   - **Root Directory:** click **Edit** → type `frontend` → click **Continue**
+   - **Framework Preset:** Next.js (auto-detected)
+5. Expand **Environment Variables** section → add one variable:
 
 | Key | Value |
 |-----|-------|
 | `NEXT_PUBLIC_API_URL` | `https://vaultci-backend.onrender.com` |
 
-5. Click **Deploy** — done in 2 minutes
-6. Your frontend URL: `https://vaultci.vercel.app`
+6. Click **Deploy**
+7. Wait 2 minutes
+8. Your frontend URL: `https://vaultci-YOURNAME.vercel.app`
+9. Open it in browser — you should see the VaultCI landing page ✅
 
 ---
 
-## Step 6 — Connect GitHub Webhook (the real deal)
+## STEP 5 — Connect GitHub Webhook (The Real Demo) · ~3 min
 
-1. Go to **any of your GitHub repos** → Settings → Webhooks → **Add webhook**
-2. Fill in:
+> Do this for **any public GitHub repo** you own (can be VaultCI itself or any other project)
+
+1. Go to that repo on GitHub → **Settings** tab → **Webhooks** (left sidebar)
+2. Click **Add webhook**
+3. Fill in:
    - **Payload URL:** `https://vaultci-backend.onrender.com/webhook/github`
    - **Content type:** `application/json`
    - **Secret:** `prakhar123`
-   - **Events:** Select individual → ✅ **Pull requests** only
-3. Click **Add webhook**
-
-Now open a Pull Request on that repo → VaultCI will:
-- Receive the webhook
-- Run all 5 analysis layers
-- Post a trust score comment directly on the PR
-- Save the result in Postgres
-- Show up on your Vercel dashboard in real-time
+   - **SSL verification:** Enable
+   - **Which events:** Select individual events → check ✅ **Pull requests** only
+4. Click **Add webhook**
+5. GitHub will send a ping — in Render logs you should see a 200 response ✅
 
 ---
 
-## After Deployment — Full Flow
+## STEP 6 — Register Repo in VaultCI Dashboard
 
-```
-You open PR on GitHub
-        ↓
-GitHub sends webhook → https://vaultci-backend.onrender.com/webhook/github
-        ↓
-5-layer analysis runs (AST + Qdrant + NetworkX + Groq)
-        ↓
-Trust Score posted as PR comment on GitHub (automatic bot comment)
-        ↓
-Result saved to Neon PostgreSQL
-        ↓
-Vercel dashboard shows the PR with real Trust Score
-```
+1. Go to `https://vaultci-YOURNAME.vercel.app/setup`
+2. Step 1: Enter your repo (e.g. `Prakhar2025/vaultci`)
+3. Step 2: Webhook Secret → type `prakhar123`
+   - Payload URL shown is already correct (points to Render)
+4. Step 3: Keep default thresholds → click **Register Repository**
+5. ✅ Repo registered in Postgres
 
 ---
 
-## Hackathon Demo Flow
+## STEP 7 — Test the Full Flow
 
-1. Open `https://vaultci.vercel.app` — show the premium UI
-2. Open a PR on your test repo — show the bot comment appearing on GitHub
-3. Dashboard auto-updates with real trust score
-4. Search memory on `/memory` page
-5. Show analytics charts
+1. Go to your GitHub repo → create a new branch → make any small change → open a Pull Request
+2. Watch Render logs — you'll see the webhook fire
+3. Within 5 seconds: VaultCI posts an **automatic bot comment** on the PR with:
+   - Trust Score (0.0 – 1.0)
+   - Gate Decision (TRUSTED / REVIEW / CAUTION / BLOCK)
+   - File risk map
+   - Architectural contradiction details
+4. Go to your Vercel dashboard → the PR now shows up with the real trust score ✅
 
-**That's the full end-to-end product.**
+---
+
+## QUICK REFERENCE — All Your URLs
+
+| Thing | URL |
+|-------|-----|
+| Frontend | `https://vaultci-YOURNAME.vercel.app` |
+| Backend | `https://vaultci-backend.onrender.com` |
+| Backend Health | `https://vaultci-backend.onrender.com/health` |
+| Backend API Docs | `https://vaultci-backend.onrender.com/docs` |
+| Webhook URL | `https://vaultci-backend.onrender.com/webhook/github` |
+| Dashboard | `https://vaultci-YOURNAME.vercel.app/dashboard` |
+| Memory Search | `https://vaultci-YOURNAME.vercel.app/memory` |
+| Analytics | `https://vaultci-YOURNAME.vercel.app/analytics` |
+| Setup | `https://vaultci-YOURNAME.vercel.app/setup` |
+
+---
+
+## IF SOMETHING BREAKS
+
+| Problem | Fix |
+|---------|-----|
+| Render deploy fails | Check logs — usually missing env variable |
+| `/health` returns error | Check DATABASE_URL format — must start with `postgresql+asyncpg://` |
+| Webhook not firing | Check GitHub → Webhooks → Recent Deliveries — see the error |
+| Qdrant connection fails | Make sure QDRANT_HOST has no `https://` prefix |
+| Frontend shows "API Offline" | Your Render backend might be sleeping (free tier sleeps after 15 min inactivity — just wait 30s for it to wake) |
+| Vercel build fails | Check Root Directory is set to `frontend` |
