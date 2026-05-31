@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { PRReport } from "../types";
-import { fetchAnalytics, fetchReport } from "../api";
+import { PRReport } from "@/lib/types";
+import { fetchAnalytics, fetchReport } from "@/lib/api";
 
 // Fallback demo data if backend isn't reachable
 const MOCK_PRS: PRReport[] = [

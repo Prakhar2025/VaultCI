@@ -4,7 +4,7 @@ import GlassCard from "@/components/ui/GlassCard";
 import { AlertOctagon, ShieldAlert, ShieldCheck } from "lucide-react";
 
 interface RiskHeatmapProps {
-  files: { path: string; risk: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" }[];
+  files: { file: string; risk: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" }[];
 }
 
 const RISK_COLORS = {
@@ -25,10 +25,10 @@ export default function RiskHeatmap({ files }: RiskHeatmapProps) {
         {files.length === 0 ? (
           <p className="text-zinc-500 text-sm">No risky files detected yet.</p>
         ) : (
-          files.map((file, i) => (
-            <div key={i} className={`flex items-center justify-between p-3 rounded-lg border text-sm font-mono ${RISK_COLORS[file.risk]}`}>
-              <span className="truncate max-w-[70%]">{file.path}</span>
-              <span className="font-bold tracking-wider">{file.risk}</span>
+          files.map((fileObj, i) => (
+            <div key={i} className={`flex items-center justify-between p-3 rounded-lg border text-sm font-mono ${RISK_COLORS[fileObj.risk]}`}>
+              <span className="truncate max-w-[70%]">{fileObj.file}</span>
+              <span className="font-bold tracking-wider">{fileObj.risk}</span>
             </div>
           ))
         )}

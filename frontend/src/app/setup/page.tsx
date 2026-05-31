@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, ChevronRight, Github, KeyRound, Server } from "lucide-react";
+import { CheckCircle2, ChevronRight, GitBranch, KeyRound, Server } from "lucide-react";
 import GlassCard from "@/components/ui/GlassCard";
 
 const STEPS = [
-  { id: 1, title: "Connect Repository", icon: Github },
+  { id: 1, title: "Connect Repository", icon: GitBranch },
   { id: 2, title: "Configure Webhooks", icon: Server },
   { id: 3, title: "Gate Thresholds", icon: KeyRound },
 ];

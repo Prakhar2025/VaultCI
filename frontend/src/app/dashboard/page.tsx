@@ -7,9 +7,9 @@ import { Activity } from "lucide-react";
 export default function DashboardPage() {
   // Mock top risk files for the demo
   const riskFiles = [
-    { path: "src/auth/login.ts", risk: "CRITICAL" as const },
-    { path: "src/database/queries.ts", risk: "HIGH" as const },
-    { path: "src/api/user.ts", risk: "MEDIUM" as const },
+    { file: "src/auth/login.ts", risk: "CRITICAL" as const },
+    { file: "src/database/queries.ts", risk: "HIGH" as const },
+    { file: "src/api/user.ts", risk: "MEDIUM" as const },
   ];
 
   return (
