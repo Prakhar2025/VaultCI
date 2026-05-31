@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+  --color-brand-primary: #8b5cf6; /* violet-500 */
+  --color-brand-secondary: #3b82f6; /* blue-500 */
+  --color-brand-accent: #10b981; /* emerald-500 */
+  --color-brand-danger: #ef4444; /* red-500 */
+  --color-brand-surface: rgba(255, 255, 255, 0.03);
+  --color-brand-surface-border: rgba(255, 255, 255, 0.1);
+  --color-brand-background: #09090b; /* zinc-950 */
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-brand-background);
+  color: #fafafa;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+/* Glass panel utility */
+.glass-panel {
+  background: var(--color-brand-surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-brand-surface-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
