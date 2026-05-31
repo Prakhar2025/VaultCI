@@ -121,7 +121,9 @@ export default function PRFeed({ owner, repo }: Props) {
           className="flex items-center gap-1.5 text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
         >
           <RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />
-          {lastRefresh.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          <span suppressHydrationWarning>
+            {lastRefresh.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}
+          </span>
         </button>
       </div>
 
