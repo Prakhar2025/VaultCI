@@ -2,74 +2,128 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
-import { Shield, LayoutDashboard, BrainCircuit, Activity, Settings } from "lucide-react";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { useEffect, useState } from "react";
+import { Shield, LayoutDashboard, Brain, BarChart3, Settings, Activity } from "lucide-react";
 
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-
-const navLinks = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Memory", href: "/memory", icon: BrainCircuit },
-  { name: "Analytics", href: "/analytics", icon: Activity },
-  { name: "Setup", href: "/setup", icon: Settings },
+const NAV_LINKS = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/memory",    label: "Memory",    icon: Brain },
+  { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/setup",     label: "Setup",     icon: Settings },
 ];
+
+type BackendStatus = "checking" | "live" | "offline";
 
 export default function Navbar() {
   const pathname = usePathname();
+  const [status, setStatus] = useState<BackendStatus>("checking");
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const checkBackend = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/health`,
+          { cache: "no-store", signal: AbortSignal.timeout(3000) }
+        );
+        setStatus(res.ok ? "live" : "offline");
+      } catch {
+        setStatus("offline");
+      }
+    };
+    checkBackend();
+    const t = setInterval(checkBackend, 15000);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const statusConfig = {
+    checking: { color: "bg-amber-400",  label: "Connecting…" },
+    live:     { color: "bg-emerald-400", label: "API Live" },
+    offline:  { color: "bg-red-400",     label: "API Offline" },
+  };
+  const s = statusConfig[status];
 
   return (
-    <motion.header 
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ type: "spring", stiffness: 100, damping: 20 }}
-      className="sticky top-0 z-50 w-full border-b border-brand-surface-border glass-panel"
+    <header
+      className={`sticky top-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? "glass border-b border-[rgba(139,92,246,0.15)]"
+          : "bg-transparent border-b border-transparent"
+      }`}
     >
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+      <nav className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-brand-primary/20 border border-brand-primary/50 overflow-hidden">
-            <Shield className="w-5 h-5 text-brand-primary group-hover:scale-110 transition-transform duration-300" />
-            <div className="absolute inset-0 bg-brand-primary/20 blur-md rounded-full group-hover:scale-150 transition-transform duration-500" />
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 group"
+          aria-label="VaultCI Home"
+        >
+          <div className="relative w-8 h-8 flex items-center justify-center">
+            <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-violet-600 to-violet-800 group-hover:from-violet-500 group-hover:to-violet-700 transition-all duration-300" />
+            <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-violet-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
+            <Shield className="w-4 h-4 text-white relative z-10" />
           </div>
-          <span className="font-bold text-xl tracking-tight text-white">Vault<span className="text-brand-primary">CI</span></span>
+          <div className="flex flex-col leading-none">
+            <span className="font-display text-[15px] text-white tracking-tight">
+              Vault<span className="text-violet-400">CI</span>
+            </span>
+            <span className="font-label text-[9px] text-zinc-500 tracking-widest">TRUST LAYER</span>
+          </div>
         </Link>
 
-        {/* Navigation */}
-        <nav className="hidden md:flex items-center gap-1">
-          {navLinks.map((link) => {
-            const isActive = pathname.startsWith(link.href);
-            const Icon = link.icon;
-            
+        {/* Nav Links */}
+        <div className="hidden md:flex items-center gap-1">
+          {NAV_LINKS.map(({ href, label, icon: Icon }) => {
+            const active = pathname === href || pathname.startsWith(href + "/");
             return (
               <Link
-                key={link.name}
-                href={link.href}
-                className="relative px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                key={href}
+                href={href}
+                className={`relative flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  active
+                    ? "text-violet-300 bg-violet-500/10"
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
+                }`}
               >
-                <div className={cn(
-                  "flex items-center gap-2 relative z-10",
-                  isActive ? "text-white" : "text-zinc-400 hover:text-white transition-colors"
-                )}>
-                  <Icon className="w-4 h-4" />
-                  {link.name}
-                </div>
-                
-                {isActive && (
-                  <motion.div
-                    layoutId="navbar-indicator"
-                    className="absolute inset-0 bg-brand-surface border border-brand-surface-border rounded-md"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
+                <Icon className="w-3.5 h-3.5" />
+                {label}
+                {active && (
+                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-violet-400" />
                 )}
               </Link>
             );
           })}
-        </nav>
-      </div>
-    </motion.header>
+        </div>
+
+        {/* Status Badge */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full glass border border-[rgba(139,92,246,0.15)]">
+            <div className={`pulse-dot ${s.color}`} />
+            <span className="font-label text-[10px] text-zinc-400">{s.label}</span>
+          </div>
+
+          {/* Mobile menu fallback */}
+          <div className="flex md:hidden items-center gap-1">
+            {NAV_LINKS.map(({ href, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className={`p-2 rounded-lg transition-colors ${
+                  pathname === href ? "text-violet-300 bg-violet-500/10" : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+              </Link>
+            ))}
+          </div>
+        </div>
+      </nav>
+    </header>
   );
 }
